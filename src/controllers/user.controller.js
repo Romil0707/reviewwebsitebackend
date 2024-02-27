@@ -3,19 +3,22 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import { uploadOncloudinary } from '../utils/uploadOncloudinary.js';
 
 const uploadData = asyncHandler(async (req, res) => {
-  const { movieTitle, description, movieName, image , adminKey} = req.body;
-console.log('Received data:', { movieTitle, description, movieName, image });
+  const { movieTitle, description, movieName , adminKey} = req.body;
+// console.log('Received data:', { movieTitle, description, movieName });
 
 
-if (!adminKey === process.env.DEFAULT_USER_PASSWORD) {
+if (adminKey !== process.env.DEFAULT_USER_PASSWORD) {
+  console.log("admin key wrong ")
   return res.status(400).json({ message: 'Please provide correct password' });
 }
-  // if (![title, description, movieName].every((field) => field.trim())) {
-  //   return res.status(400).json({ message: 'Please provide all fields' });
-  // }
+
+  if ([movieTitle, description, movieName].some((field) => field.trim() === '')) {
+    return res.status(400).json({ message: 'Please provide all fields' });
+  }
   const movieImageLocalPath = req.file?.path;
 if(!movieImageLocalPath){
-  console.log("local path image not provided : " + movieImageLocalPath);
+  // console.log("local path image not provided : " + movieImageLocalPath);
+  return res.status(400).json({ message: "local path image not provided : " + movieImageLocalPath});
 }
   const avatar = await uploadOncloudinary(movieImageLocalPath);
   
@@ -32,9 +35,10 @@ if(!movieImageLocalPath){
     return res.status(500).json({ message: 'Internal Server Error' });
   }
   console.log("data uploaded successfully"); 
-  
-  res.status(201).json({ message: 'Data uploaded successfully', user });
-  
+  const userWithoutId = user.toObject();
+delete userWithoutId._id;
+  res.status(201).json({ message: 'Data uploaded successfully', userWithoutId });
+  return;
 });
 
 
