@@ -3,11 +3,13 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import { uploadOncloudinary } from '../utils/uploadOncloudinary.js';
 
 const uploadData = asyncHandler(async (req, res) => {
-  const { movieTitle, description, movieName, image } = req.body;
+  const { movieTitle, description, movieName, image , adminKey} = req.body;
 console.log('Received data:', { movieTitle, description, movieName, image });
 
 
-
+if (!adminKey === process.env.DEFAULT_USER_PASSWORD) {
+  return res.status(400).json({ message: 'Please provide correct password' });
+}
   // if (![title, description, movieName].every((field) => field.trim())) {
   //   return res.status(400).json({ message: 'Please provide all fields' });
   // }
