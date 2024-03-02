@@ -35,27 +35,58 @@ if(!movieImageLocalPath){
     return res.status(500).json({ message: 'Internal Server Error' });
   }
   console.log("data uploaded successfully"); 
-  const userWithoutId = user.toObject();
-delete userWithoutId._id;
-  res.status(201).json({ message: 'Data uploaded successfully', userWithoutId });
+  res.status(201).json({ message: 'Data uploaded successfully', user });
   return;
 });
 
 
-
 const fetchData = asyncHandler(async (req, res) => {
   const { page = 1, pageSize = 5 } = req.query;
-
+  
   console.log('Received request for fetching users:', { page, pageSize });
-
+  
   const users = await User.find()
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * [pageSize])
-    .limit(parseInt(pageSize));
+  .sort({ createdAt: -1 })
+  .skip((page - 1) * [pageSize])
+  .limit(parseInt(pageSize));
   res.status(200).json(users);
 });
 
+const getPostById = asyncHandler(async (req, res) => {
+const postId = req.params.postId; // Match the route parameter name
+console.log("postId: " + postId);
+  const post = await User.findById(postId);
+  console.log("post: " + post);
 
+  if (!post) {
+    return res.status(404).json({ message: "Movie Not Found" });
+  } else {
+    return res.status(200).json(post);
+  }
+});
+
+
+
+const deletePost = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+  const adminKey = req.headers.authorization;
+
+  if (adminKey !== process.env.DEFAULT_USER_PASSWORD) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  // Check if the post exists
+  const existingPost = await User.findById(postId);
+
+  if (!existingPost) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+
+  // If the post exists, delete it
+  const deletedPost = await User.findByIdAndDelete(postId);
+
+  res.status(200).json({ message: 'Post deleted successfully', deletedPost });
+});
 
 // for developmode only 
 // const updateImageUrlForAllUsers = asyncHandler(async (req, res) => {
@@ -83,4 +114,4 @@ const fetchData = asyncHandler(async (req, res) => {
 //   }
 // });
 
-export { uploadData, fetchData };
+export { uploadData, fetchData ,getPostById,deletePost};
